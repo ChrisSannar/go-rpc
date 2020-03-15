@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	// "io/ioutil"
@@ -44,7 +43,7 @@ func apiPOSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	newLog.Time = time.Now()
 
-	fmt.Printf("Log: %+v", newLog)
+	logs = append(logs, newLog)
 }
 
 func handleRequests() {
@@ -52,7 +51,6 @@ func handleRequests() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/", homePage)
-	// router.HandleFunc("/game", getGamePage).Methods("GET")
 	router.HandleFunc("/api/get", apiGETHandler).Methods("GET")
 	router.HandleFunc("/api/post", apiPOSTHandler).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8080", router))

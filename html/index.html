@@ -38,19 +38,25 @@
     </div>
     <div class="subnote">
       <p>Use the arrow keys to change your choice</p>
-      <p>Press space when ready</p>
+      <p>Press space to stop and restart the game.</p>
     </div>
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script>
+
+    // All the various displays we need to update
     let startDisplay = document.querySelector('#start-display')
     let gameDisplay = document.querySelector('#game-display')
     let timer = document.querySelector('#timer')
     let playerHand = document.querySelector('#player-hand')
     let opponentHand = document.querySelector('#opponent-hand')
     let playAgain = document.querySelector('#play-again')
+
+    // Key parts to the game
     let playerName = ''
     let options = ['rock', 'paper', 'scissors']
+
+    // State of the game
     let gameState = {
       stopGame: true,
       interval: null,
@@ -119,15 +125,19 @@
     }
 
     function endGame() {
+      // Reset the values and clear the time
       gameState.verdict = ''
       gameState.combo = ''
-      // document.querySelector
-      randomComputerPick()
-      clearInterval(gameState.interval)
       timer.innerHTML = 0
       gameState.stopGame = true
+      clearInterval(gameState.interval)
+
+      // Pick and evaluate the combo
+      randomComputerPick()
       switch (gameState.playerChoice) {
-        case 0: 
+
+        // Player chooses Rock
+        case 0:
           gameState.combo += 'R'
           if (gameState.computerChoice === 0) {
             tie()
@@ -140,6 +150,8 @@
             gameState.combo += 'S'
           }
           break
+        
+        // Player chooses Paper
         case 1: 
           gameState.combo += 'P'
           if (gameState.computerChoice === 0) {
@@ -153,6 +165,8 @@
             gameState.combo += 'S'
           }
           break;
+
+        // Player chooses Scissors
         case 2:
           gameState.combo += 'S'
           if (gameState.computerChoice === 0) {
@@ -174,6 +188,7 @@
       sendGameStateToServer()
     }
 
+    // Sets the value on the page
     function selectChoice(choice) {
       playerHand.innerText = choice.toUpperCase()
     }
@@ -184,17 +199,19 @@
     }
 
     document.addEventListener('keydown', function(e) {
-      if (!gameState.stopGame) {
-        if (e.key === ' ') {
-          endGame()
+      if (e.key === ' ') {
+        if (gameState.stopGame) {
+          startGame()
         } else {
-          if (e.key === 'ArrowDown') {
-            gameState.playerChoice = (gameState.playerChoice + 1) % options.length
-          } else if (e.key === 'ArrowUp') {
-            gameState.playerChoice = gameState.playerChoice - 1 < 0 ? options.length - 1 : gameState.playerChoice - 1
-          }
-          selectChoice(options[gameState.playerChoice])
+          endGame()
         }
+      } else if (!gameState.stopGame) {
+        if (e.key === 'ArrowDown') {
+          gameState.playerChoice = (gameState.playerChoice + 1) % options.length
+        } else if (e.key === 'ArrowUp') {
+          gameState.playerChoice = gameState.playerChoice - 1 < 0 ? options.length - 1 : gameState.playerChoice - 1
+        }
+        selectChoice(options[gameState.playerChoice])
       }
     })
     selectChoice(options[gameState.playerChoice])
