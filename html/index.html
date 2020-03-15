@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPC</title>
+</head>
+<body>
+  <div id="wrap">
+    <h1>Rock Paper Scissors</h1>
+    <div id="start-display">
+      <input type="text" name="name" id="name" placeholder="Name">
+      <button id="go-btn">
+        GO!
+      </button>
+    </div>
+    <div id="game-display" style="display: none;">
+      <table id="board">
+        <tr id="vs-names">
+          <td id="player-name"></td>
+          <td>VS</td>
+          <td id="opponent-name">Computer</td>
+        </tr>
+        <tr>
+          <td id="player-hand"></td>
+          <td></td>
+          <td id="opponent-hand">?</td>
+        </tr>
+        <tr>
+          <td id="player-score"></td>
+          <td></td>
+          <td id="opponent-score"></td>
+        </tr>
+      </table>
+      <p id="timer"></p>
+      <p id="verdict"></p>
+      <button id="play-again" style="margin: auto;">Play Again</button>
+    </div>
+    <div class="subnote">
+      <p>Use the arrow keys to change your choice</p>
+      <p>Press space when ready</p>
+    </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script>
+    let startDisplay = document.querySelector('#start-display')
+    let gameDisplay = document.querySelector('#game-display')
+    let timer = document.querySelector('#timer')
+    let playerHand = document.querySelector('#player-hand')
+    let opponentHand = document.querySelector('#opponent-hand')
+    let playAgain = document.querySelector('#play-again')
+    let playerName = ''
+    let options = ['rock', 'paper', 'scissors']
+    let gameState = {
+      stopGame: true,
+      interval: null,
+      timerValue: 0,
+      playerChoice: 0,
+      computerChoice: 0,
+      playerScore: 0,
+      opponentScore: 0,
+      verdict: '',
+      combo: ''
+    }
+
+    function sendGameStateToServer() {
+      $.ajax({
+        url: '/api/post',
+        method: 'POST',
+        data: gameState        
+      }).done(resp => {
+        console.log('RESP', resp)
+      })
+    }
+
+    function startGame() {
+      document.querySelector('#player-name').innerText = playerName ? playerName : '?'
+      document.querySelector('#verdict').innerText = ''
+      opponentHand.innerText = ''
+      playAgain.style.display = 'none'
+      gameState.stopGame = false
+      startTimer()
+    }
+
+    function endGame() {
+      gameState.verdict = ''
+      gameState.combo = ''
+      // document.querySelector
+      randomComputerPick()
+      clearInterval(gameState.interval)
+      timer.innerHTML = 0
+      gameState.stopGame = true
+      switch (gameState.playerChoice) {
+        case 0: 
+          gameState.combo += 'R'
+          if (gameState.computerChoice === 0) {
+            gameState.verdict = 'TIE'
+            gameState.combo += 'R'
+          } else if (gameState.computerChoice === 1) {
+            gameState.verdict = 'YOU LOOSE'
+          } else {
+            gameState.verdict = 'YOU WIN!'
+            gameState.combo += 'S'
+          }
+          break
+        case 1: 
+          gameState.combo += 'P'
+          if (gameState.computerChoice === 0) {
+            gameState.verdict = 'YOU WIN!'
+            gameState.combo += 'R'
+          } else if (gameState.computerChoice === 1) {
+            gameState.verdict = 'TIE'
+            gameState.combo += 'P'        
+          } else {
+            gameState.verdict = 'YOU LOOSE'
+            gameState.combo += 'S'
+          }
+          break;
+        case 2:
+          gameState.combo += 'S'
+          if (gameState.computerChoice === 0) {
+            gameState.verdict = 'YOU LOOSE'
+            gameState.combo += 'R'
+          } else if (gameState.computerChoice === 1) {
+            gameState.verdict = 'YOU WIN!'
+            gameState.combo += 'P'
+          } else {
+            gameState.verdict = 'TIE'
+            gameState.combo += 'S'       
+          }
+          break
+        default:
+          break
+      }
+      gameState.playerScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? -1 : 1
+      gameState.opponentScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? 1 : -1
+      document.querySelector('#player-score').innerText = gameState.playerScore < 0 ? 0 : gameState.playerScore
+      document.querySelector('#opponent-score').innerText = gameState.opponentScore < 0 ? 0 : gameState.opponentScore
+      document.querySelector('#verdict').innerText = gameState.verdict
+      sendGameStateToServer()
+      playAgain.style.display = 'block'
+    }
+
+    function selectChoice(choice) {
+      playerHand.innerText = choice.toUpperCase()
+    }
+
+    function randomComputerPick() {
+      gameState.computerChoice = Math.floor(Math.random() * options.length % options.length)
+      opponentHand.innerHTML = options[gameState.computerChoice].toUpperCase()
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (!gameState.stopGame) {
+        if (e.key === ' ') {
+          endGame()
+        } else {
+          if (e.key === 'ArrowDown') {
+            gameState.playerChoice = (gameState.playerChoice + 1) % options.length
+          } else if (e.key === 'ArrowUp') {
+            gameState.playerChoice = gameState.playerChoice - 1 < 0 ? options.length - 1 : gameState.playerChoice - 1
+          }
+          selectChoice(options[gameState.playerChoice])
+        }
+      }
+    })
+    selectChoice(options[gameState.playerChoice])
+
+    function startTimer() {
+      gameState.timerValue = 5
+      gameState.interval = setInterval(() => {
+        timer.innerHTML = gameState.timerValue
+        gameState.timerValue--
+        if (gameState.timerValue < 0) {
+          clearInterval(gameState.interval)
+          endGame()
+        }
+      }, 1000)
+    }
+
+    document.querySelector('#go-btn').addEventListener('click', function() {
+      startDisplay.style.display = 'none'
+      gameDisplay.style.display = 'flex'
+      playerName = document.querySelector('#name').value
+      startGame()
+    })
+
+    playAgain.addEventListener('click', function() {
+      startGame()
+    })
+
+  </script>
+</body>
+</html>
+<style>
+  #wrap, #start-display, #game-display {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  #name {
+    margin: 1em auto;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  #go-btn {
+    margin: auto;
+    font-size: 16px;
+  }
+
+  #board {
+    margin: auto;
+    text-align: center;
+  }
+
+  td {
+    padding: 0.5em;
+    font-size: 20px;
+    width: 100px;
+  }
+
+  .subnote {
+    margin-top: 1em;
+  }
+
+  .subnote p{
+    margin-bottom: 0;
+  }
+</style>
