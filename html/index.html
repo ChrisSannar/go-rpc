@@ -59,18 +59,28 @@
       computerChoice: 0,
       playerScore: 0,
       opponentScore: 0,
+      winner: '',
+      looser: '',
       verdict: '',
       combo: ''
     }
 
     function sendGameStateToServer() {
+      
+      let formatedData = {
+        winner: gameState.winner,
+        looser: gameState.looser,
+        combo: gameState.combo
+      }
+
       $.ajax({
         url: '/api/post',
         method: 'POST',
-        data: gameState        
-      }).done(resp => {
-        console.log('RESP', resp)
+        data: JSON.stringify(formatedData)
       })
+      // .done(resp => {
+      //   console.log('RESP', resp)
+      // })
     }
 
     function startGame() {
@@ -80,6 +90,32 @@
       playAgain.style.display = 'none'
       gameState.stopGame = false
       startTimer()
+    }
+
+    function playerWins() {
+      gameState.winner = playerName
+      gameState.looser = 'Computer'
+      gameState.verdict = 'YOU WIN!'
+    }
+
+    function computerWins() {
+      gameState.winner = 'Computer'
+      gameState.looser = playerName
+      gameState.verdict = 'YOU LOOSE'
+    }
+
+    function tie() {
+      gameState.winner = 'TIE'
+      gameState.looser = 'TIE'
+      gameState.verdict = 'TIE'
+    }
+
+    function calculatePointsAndSetDisplay() {
+      gameState.playerScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? -1 : 1
+      gameState.opponentScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? 1 : -1
+      document.querySelector('#player-score').innerText = gameState.playerScore < 0 ? 0 : gameState.playerScore
+      document.querySelector('#opponent-score').innerText = gameState.opponentScore < 0 ? 0 : gameState.opponentScore
+      document.querySelector('#verdict').innerText = gameState.verdict
     }
 
     function endGame() {
@@ -94,51 +130,48 @@
         case 0: 
           gameState.combo += 'R'
           if (gameState.computerChoice === 0) {
-            gameState.verdict = 'TIE'
+            tie()
             gameState.combo += 'R'
           } else if (gameState.computerChoice === 1) {
-            gameState.verdict = 'YOU LOOSE'
+            computerWins()
+            gameState.combo += 'P'
           } else {
-            gameState.verdict = 'YOU WIN!'
+            playerWins()
             gameState.combo += 'S'
           }
           break
         case 1: 
           gameState.combo += 'P'
           if (gameState.computerChoice === 0) {
-            gameState.verdict = 'YOU WIN!'
+            playerWins()
             gameState.combo += 'R'
           } else if (gameState.computerChoice === 1) {
-            gameState.verdict = 'TIE'
+            tie()
             gameState.combo += 'P'        
           } else {
-            gameState.verdict = 'YOU LOOSE'
+            computerWins()
             gameState.combo += 'S'
           }
           break;
         case 2:
           gameState.combo += 'S'
           if (gameState.computerChoice === 0) {
-            gameState.verdict = 'YOU LOOSE'
+            computerWins()
             gameState.combo += 'R'
           } else if (gameState.computerChoice === 1) {
-            gameState.verdict = 'YOU WIN!'
+            playerWins()
             gameState.combo += 'P'
           } else {
-            gameState.verdict = 'TIE'
+            tie()
             gameState.combo += 'S'       
           }
           break
         default:
           break
       }
-      gameState.playerScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? -1 : 1
-      gameState.opponentScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? 1 : -1
-      document.querySelector('#player-score').innerText = gameState.playerScore < 0 ? 0 : gameState.playerScore
-      document.querySelector('#opponent-score').innerText = gameState.opponentScore < 0 ? 0 : gameState.opponentScore
-      document.querySelector('#verdict').innerText = gameState.verdict
-      sendGameStateToServer()
+      calculatePointsAndSetDisplay()
       playAgain.style.display = 'block'
+      sendGameStateToServer()
     }
 
     function selectChoice(choice) {
