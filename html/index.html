@@ -40,6 +40,7 @@
       <p>Use the arrow keys to change your choice</p>
       <p>Press space to stop and restart the game.</p>
     </div>
+    <a href="/history" style="margin-top: 1em">History</a>
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script>
@@ -84,9 +85,6 @@
         method: 'POST',
         data: JSON.stringify(formatedData)
       })
-      // .done(resp => {
-      //   console.log('RESP', resp)
-      // })
     }
 
     function startGame() {
@@ -98,29 +96,28 @@
       startTimer()
     }
 
+    // In the case of each scenario...
     function playerWins() {
+      gameState.playerScore += 1
       gameState.winner = playerName
       gameState.looser = 'Computer'
       gameState.verdict = 'YOU WIN!'
     }
-
     function computerWins() {
+      gameState.opponentScore += 1
       gameState.winner = 'Computer'
       gameState.looser = playerName
       gameState.verdict = 'YOU LOOSE'
     }
-
     function tie() {
       gameState.winner = 'TIE'
       gameState.looser = 'TIE'
       gameState.verdict = 'TIE'
     }
 
-    function calculatePointsAndSetDisplay() {
-      gameState.playerScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? -1 : 1
-      gameState.opponentScore += gameState.verdict == 'TIE' ? 0 : gameState.verdict == 'YOU LOOSE' ? 1 : -1
-      document.querySelector('#player-score').innerText = gameState.playerScore < 0 ? 0 : gameState.playerScore
-      document.querySelector('#opponent-score').innerText = gameState.opponentScore < 0 ? 0 : gameState.opponentScore
+    function displayPoints() {
+      document.querySelector('#player-score').innerText = gameState.playerScore
+      document.querySelector('#opponent-score').innerText = gameState.opponentScore
       document.querySelector('#verdict').innerText = gameState.verdict
     }
 
@@ -183,7 +180,7 @@
         default:
           break
       }
-      calculatePointsAndSetDisplay()
+      displayPoints()
       playAgain.style.display = 'block'
       sendGameStateToServer()
     }
@@ -193,6 +190,7 @@
       playerHand.innerText = choice.toUpperCase()
     }
 
+    // Computer randomly picks a hand and display it
     function randomComputerPick() {
       gameState.computerChoice = Math.floor(Math.random() * options.length % options.length)
       opponentHand.innerHTML = options[gameState.computerChoice].toUpperCase()
@@ -214,8 +212,9 @@
         selectChoice(options[gameState.playerChoice])
       }
     })
-    selectChoice(options[gameState.playerChoice])
+    selectChoice(options[gameState.playerChoice])   // Run this right when we start
 
+    // A countdown timer before you pick a hand
     function startTimer() {
       gameState.timerValue = 5
       gameState.interval = setInterval(() => {
@@ -228,6 +227,7 @@
       }, 1000)
     }
 
+    // Starts the game from the display screen
     document.querySelector('#go-btn').addEventListener('click', function() {
       startDisplay.style.display = 'none'
       gameDisplay.style.display = 'flex'

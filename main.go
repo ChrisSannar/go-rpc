@@ -15,7 +15,7 @@ import (
 )
 
 // Include the project ID here
-var projectID string = "go-rpc-270604"
+var projectID string = "your-project-id"
 
 type RPSLog struct {
 	// ID     string `json:"id"`
@@ -27,6 +27,10 @@ type RPSLog struct {
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./html/index.html")
+}
+
+func historyPage(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./html/history.html")
 }
 
 func apiGETHandler(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +101,7 @@ func handleRequests() {
 
 	// Handle the various requests
 	router.HandleFunc("/", homePage)
+	router.HandleFunc("/history", historyPage)
 	router.HandleFunc("/api/get", apiGETHandler).Methods("GET")
 	router.HandleFunc("/api/post", apiPOSTHandler).Methods("POST")
 
@@ -105,5 +110,5 @@ func handleRequests() {
 }
 
 func main() {
-	handleRequests()
+	handleRequests() // If I need to explain this, there is no hope for you
 }
