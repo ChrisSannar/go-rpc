@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPC</title>
+</head>
+<body>
+  <div id="wrap">
+    <h1>Rock Paper Scissors</h1>
+    <a href="/">Back</a>
+    <div id="history">
+        
+    </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script>
+    let history = document.querySelector('#history')
+    $.ajax({
+        url: '/api/get',
+        method: 'GET'
+    }).done(resp => {
+        resp.forEach(game => {
+            let gameNode = document.createElement('div')
+            gameNode.classList.add('game')
+            gameNode.innerHTML = `
+                <p>${ new Date(game.timestamp).toDateString() }</p>
+                <p>Winner: ${ game.winner }<p>
+                <p>Looser: ${ game.looser }<p>
+                <p>Combo: ${ formatHandName(game.combo[0]) } VS ${ formatHandName(game.combo[1]) }<p>
+                <div class="divide"></div>
+            `
+            history.appendChild(gameNode)
+        })
+    })
+
+    function formatHandName(hand) {
+        if (hand === 'R') {
+            return 'Rock'
+        } else if (hand === 'P') {
+            return 'Paper'
+        } else if (hand === 'S') {
+            return 'Scissors'
+        }
+    }
+  </script>
+</body>
+</html>
+<style>
+  #wrap {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .game p {
+      margin-bottom: 0.5em;
+  }
+
+  .divide {
+    height: 1px;
+    width: 80%;
+    margin: auto;
+    background: black;
+  }
+</style>
